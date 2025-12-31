@@ -32,6 +32,11 @@ jobs:
         if: github.event_name == 'workflow_dispatch' || github.event_name == 'push' || env.has_label == 'true'
         uses: actions/checkout@v2
 
+      - name: Set lowercase repository owner
+        if: github.event_name == 'workflow_dispatch' || github.event_name == 'push' || env.has_label == 'true'
+        run: |
+          echo "REPO_OWNER_LOWER=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
       - name: Retrieve existing version from file
         id: retrieve-version
         if: github.event_name == 'workflow_dispatch' || github.event_name == 'push' || env.has_label == 'true'
@@ -81,18 +86,18 @@ jobs:
         if: github.event_name == 'workflow_dispatch' || github.event_name == 'push' || env.has_label == 'true'
         run: |
           docker build . -t email-oauth2-proxy-docker
-          docker tag email-oauth2-proxy-docker ghcr.io/${{ github.repository_owner }}/email-oauth2-proxy-docker:latest
-          docker tag email-oauth2-proxy-docker ghcr.io/${{ github.repository_owner }}/email-oauth2-proxy-docker:${{ env.version }}
-          docker tag email-oauth2-proxy-docker ${{ github.repository_owner }}/email-oauth2-proxy-docker:${{ env.version }}
-          docker tag email-oauth2-proxy-docker ${{ github.repository_owner }}/email-oauth2-proxy-docker:latest
+          docker tag email-oauth2-proxy-docker ghcr.io/${{ env.REPO_OWNER_LOWER }}/email-oauth2-proxy-docker:latest
+          docker tag email-oauth2-proxy-docker ghcr.io/${{ env.REPO_OWNER_LOWER }}/email-oauth2-proxy-docker:${{ env.version }}
+          docker tag email-oauth2-proxy-docker ${{ env.REPO_OWNER_LOWER }}/email-oauth2-proxy-docker:${{ env.version }}
+          docker tag email-oauth2-proxy-docker ${{ env.REPO_OWNER_LOWER }}/email-oauth2-proxy-docker:latest
 
       - name: Push image
         if: github.event_name == 'workflow_dispatch' || github.event_name == 'push' || env.has_label == 'true'
         run: |
           docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
-          docker push ghcr.io/${{ github.repository_owner }}/email-oauth2-proxy-docker:${{ env.version }}
-          docker push ghcr.io/${{ github.repository_owner }}/email-oauth2-proxy-docker:latest
+          docker push ghcr.io/${{ env.REPO_OWNER_LOWER }}/email-oauth2-proxy-docker:${{ env.version }}
+          docker push ghcr.io/${{ env.REPO_OWNER_LOWER }}/email-oauth2-proxy-docker:latest
           docker login docker.io -u ${{ secrets.DOCKERHUB_USERNAME }} -p "${{ secrets.DOCKERHUB_TOKEN }}"
-          docker push ${{ github.repository_owner }}/email-oauth2-proxy-docker:${{ env.version }}
-          docker push ${{ github.repository_owner }}/email-oauth2-proxy-docker:latest
+          docker push ${{ env.REPO_OWNER_LOWER }}/email-oauth2-proxy-docker:${{ env.version }}
+          docker push ${{ env.REPO_OWNER_LOWER }}/email-oauth2-proxy-docker:latest
 
