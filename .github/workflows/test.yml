@@ -1,4 +1,4 @@
-name: Issue Autobuild Workflow
+name: Issue Autobuild Workflow Test
 
 on:
   issues:
