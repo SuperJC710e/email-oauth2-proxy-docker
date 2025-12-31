@@ -22,19 +22,19 @@ jobs:
           echo "has_label=$has_label" >> $GITHUB_ENV
 
       - name: Checkout code
-        if: env.has_label == 'true'
+        if: github.event_name == 'workflow_dispatch' || env.has_label == 'true'
         uses: actions/checkout@v2
 
       - name: Retrieve existing version from file
         id: retrieve-version
-        if: env.has_label == 'true'
+        if: github.event_name == 'workflow_dispatch' || env.has_label == 'true'
         run: |
           existing_version=$(cat .github/autobuild_version 2>/dev/null || echo "0")
           echo "existing_version=$existing_version" >> $GITHUB_ENV
 
       - name: Generate version based on Date Versioning (YYYY.MM.DD)
         id: generate-version
-        if: env.has_label == 'true'
+        if: github.event_name == 'workflow_dispatch' || env.has_label == 'true'
         run: |
           current_date=$(date +'%Y.%m.%d')
           existing_version="${{ env.existing_version }}"
@@ -56,7 +56,7 @@ jobs:
 
       - name: Save generated version to file
         id: save-version
-        if: env.has_label == 'true'
+        if: github.event_name == 'workflow_dispatch' || env.has_label == 'true'
         run: |
           echo "${{ env.version }}" > .github/autobuild_version
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
@@ -66,12 +66,12 @@ jobs:
           git push origin $GITHUB_REF
 
       - name: Download dependencies
-        if: env.has_label == 'true'
+        if: github.event_name == 'workflow_dispatch' || env.has_label == 'true'
         run: |
           curl -o emailproxy.py https://raw.githubusercontent.com/simonrob/email-oauth2-proxy/main/emailproxy.py
 
       - name: Build image
-        if: env.has_label == 'true'
+        if: github.event_name == 'workflow_dispatch' || env.has_label == 'true'
         run: |
           docker build . -t email-oauth2-proxy-docker
           docker tag email-oauth2-proxy-docker ghcr.io/blacktirion/email-oauth2-proxy-docker:latest
@@ -80,7 +80,7 @@ jobs:
           docker tag email-oauth2-proxy-docker blacktirion/email-oauth2-proxy-docker:latest
 
       - name: Push image
-        if: env.has_label == 'true'
+        if: github.event_name == 'workflow_dispatch' || env.has_label == 'true'
         run: |
           docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
           docker push ghcr.io/blacktirion/email-oauth2-proxy-docker:${{ env.version }}
