@@ -91,12 +91,16 @@ jobs:
           docker tag email-oauth2-proxy-docker ${{ env.REPO_OWNER_LOWER }}/email-oauth2-proxy-docker:${{ env.version }}
           docker tag email-oauth2-proxy-docker ${{ env.REPO_OWNER_LOWER }}/email-oauth2-proxy-docker:latest
 
-      - name: Push image
+      - name: Push image to GHCR
         if: github.event_name == 'workflow_dispatch' || github.event_name == 'push' || env.has_label == 'true'
         run: |
           docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
           docker push ghcr.io/${{ env.REPO_OWNER_LOWER }}/email-oauth2-proxy-docker:${{ env.version }}
           docker push ghcr.io/${{ env.REPO_OWNER_LOWER }}/email-oauth2-proxy-docker:latest
+
+      - name: Push image to Docker Hub
+        if: (github.event_name == 'workflow_dispatch' || github.event_name == 'push' || env.has_label == 'true') && secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != ''
+        run: |
           docker login docker.io -u ${{ secrets.DOCKERHUB_USERNAME }} -p "${{ secrets.DOCKERHUB_TOKEN }}"
           docker push ${{ env.REPO_OWNER_LOWER }}/email-oauth2-proxy-docker:${{ env.version }}
           docker push ${{ env.REPO_OWNER_LOWER }}/email-oauth2-proxy-docker:latest
