@@ -78,18 +78,18 @@ jobs:
         if: github.event_name == 'workflow_dispatch' || env.has_label == 'true'
         run: |
           docker build . -t email-oauth2-proxy-docker
-          docker tag email-oauth2-proxy-docker ghcr.io/blacktirion/email-oauth2-proxy-docker:latest
-          docker tag email-oauth2-proxy-docker ghcr.io/blacktirion/email-oauth2-proxy-docker:${{ env.version }}
-          docker tag email-oauth2-proxy-docker blacktirion/email-oauth2-proxy-docker:${{ env.version }}
-          docker tag email-oauth2-proxy-docker blacktirion/email-oauth2-proxy-docker:latest
+          docker tag email-oauth2-proxy-docker ghcr.io/${{ github.repository_owner }}/email-oauth2-proxy-docker:latest
+          docker tag email-oauth2-proxy-docker ghcr.io/${{ github.repository_owner }}/email-oauth2-proxy-docker:${{ env.version }}
+          docker tag email-oauth2-proxy-docker ${{ github.repository_owner }}/email-oauth2-proxy-docker:${{ env.version }}
+          docker tag email-oauth2-proxy-docker ${{ github.repository_owner }}/email-oauth2-proxy-docker:latest
 
       - name: Push image
         if: github.event_name == 'workflow_dispatch' || env.has_label == 'true'
         run: |
           docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
-          docker push ghcr.io/blacktirion/email-oauth2-proxy-docker:${{ env.version }}
-          docker push ghcr.io/blacktirion/email-oauth2-proxy-docker:latest
+          docker push ghcr.io/${{ github.repository_owner }}/email-oauth2-proxy-docker:${{ env.version }}
+          docker push ghcr.io/${{ github.repository_owner }}/email-oauth2-proxy-docker:latest
           docker login docker.io -u ${{ secrets.DOCKERHUB_USERNAME }} -p "${{ secrets.DOCKERHUB_TOKEN }}"
-          docker push blacktirion/email-oauth2-proxy-docker:${{ env.version }}
-          docker push blacktirion/email-oauth2-proxy-docker:latest
+          docker push ${{ github.repository_owner }}/email-oauth2-proxy-docker:${{ env.version }}
+          docker push ${{ github.repository_owner }}/email-oauth2-proxy-docker:latest
 
