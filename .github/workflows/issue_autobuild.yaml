@@ -99,9 +99,16 @@ jobs:
           docker push ghcr.io/${{ env.REPO_OWNER_LOWER }}/email-oauth2-proxy-docker:latest
 
       - name: Push image to Docker Hub
-        if: (github.event_name == 'workflow_dispatch' || github.event_name == 'push' || env.has_label == 'true') && secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != ''
+        if: github.event_name == 'workflow_dispatch' || github.event_name == 'push' || env.has_label == 'true'
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
         run: |
-          docker login docker.io -u ${{ secrets.DOCKERHUB_USERNAME }} -p "${{ secrets.DOCKERHUB_TOKEN }}"
-          docker push ${{ env.REPO_OWNER_LOWER }}/email-oauth2-proxy-docker:${{ env.version }}
-          docker push ${{ env.REPO_OWNER_LOWER }}/email-oauth2-proxy-docker:latest
+          if [ -n "$DOCKERHUB_USERNAME" ] && [ -n "$DOCKERHUB_TOKEN" ]; then
+            docker login docker.io -u "$DOCKERHUB_USERNAME" -p "$DOCKERHUB_TOKEN"
+            docker push ${{ env.REPO_OWNER_LOWER }}/email-oauth2-proxy-docker:${{ env.version }}
+            docker push ${{ env.REPO_OWNER_LOWER }}/email-oauth2-proxy-docker:latest
+          else
+            echo "Docker Hub credentials not configured, skipping Docker Hub push"
+          fi
 
