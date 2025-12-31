@@ -31,13 +31,12 @@ else
     LOG_FILE_PATH="/app/emailproxy.log"
 fi
 
-# Execute the Python script with arguments
-python emailproxy.py --no-gui --log-file $LOG_FILE_PATH --config-file /config/emailproxy.config $CACHE_STORE_VALUE $DEBUG_VALUE $EXTERNAL_AUTH_VALUE $LOCAL_SERVER_AUTH_VALUE &
+# Start tail in the background with -F to wait for file creation
+tail -F $LOG_FILE_PATH &
+TAIL_PID=$!
 
-# Wait for the log file to be created
-while [ ! -f $LOG_FILE_PATH ]; do
-    sleep 1
-done
+# Trap signals to ensure clean shutdown
+trap "kill $TAIL_PID 2>/dev/null; exit" TERM INT
 
-# Stream the log file to Docker logs or a specified file
-tail -f $LOG_FILE_PATH
+# Execute the Python script with arguments as PID 1
+exec python emailproxy.py --no-gui --log-file $LOG_FILE_PATH --config-file /config/emailproxy.config $CACHE_STORE_VALUE $DEBUG_VALUE $EXTERNAL_AUTH_VALUE $LOCAL_SERVER_AUTH_VALUE
