@@ -1,0 +1,26 @@
+name: emailproxy
+services:
+    emailproxy:
+        container_name: emailproxy
+        environment:
+            # CACHE_STORE: /config/credstore.config
+            DEBUG: "true"
+            LOCAL_SERVER_AUTH: "true"
+            LOGFILE: "true"
+        hostname: emailproxy
+        image: ghcr.io/superjc710e/email-oauth2-proxy-docker:latest
+        labels:
+            icon: https://auth-email.com/static/img/logo.svg
+        network_mode: bridge
+        ports:
+            - target: 2465
+              published: "2465"
+              protocol: tcp
+            - target: 80
+              published: "8080"
+              protocol: tcp
+        restart: always
+        volumes:
+            - type: bind
+              source: ./config
+              target: /config

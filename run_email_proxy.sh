@@ -44,8 +44,8 @@ cleanup() {
 # Set up signal handlers for graceful shutdown
 trap cleanup TERM INT
 
-# Start Python process in background with unbuffered I/O
-python -u emailproxy.py --no-gui --log-file $LOG_FILE_PATH --config-file /config/emailproxy.config $CACHE_STORE_VALUE $DEBUG_VALUE $EXTERNAL_AUTH_VALUE $LOCAL_SERVER_AUTH_VALUE &
+# Start emailproxy in the background
+emailproxy --no-gui --log-file $LOG_FILE_PATH --config-file /config/emailproxy.config $CACHE_STORE_VALUE $DEBUG_VALUE $EXTERNAL_AUTH_VALUE $LOCAL_SERVER_AUTH_VALUE &
 PYTHON_PID=$!
 
 # Start tail in background to stream logs to Docker
