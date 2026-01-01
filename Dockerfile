@@ -1,9 +1,8 @@
 # Use a Python image based on Alpine Linux
-FROM python:alpine
+FROM python:3.11-alpine
 
 # Set the working directory
 WORKDIR /app
-
 
 # Install core dependencies
 RUN pip install --no-cache-dir \
