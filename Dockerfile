@@ -1,4 +1,5 @@
 # Use a Python image based on Alpine Linux
+# Versions newer than 3.11 are not yet fully supported by emailproxy
 FROM python:3.11-alpine
 
 # Environment variables

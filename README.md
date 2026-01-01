@@ -12,6 +12,8 @@ This repository has an automated method that will rebuild the docker container i
 
 The config file should be named `emailproxy.config` and placed in whichever folder you map via Docker Run or Docker Compose. (The example is using `./config`)
 
+Read the full version to understand the configuration options [simonrob/emailproxy.config](https://github.com/simonrob/email-oauth2-proxy/blob/main/emailproxy.config)
+
 Example (redacted):
 
 ```ini
