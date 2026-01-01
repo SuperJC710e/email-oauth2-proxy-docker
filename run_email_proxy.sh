@@ -39,4 +39,5 @@ TAIL_PID=$!
 trap "kill $TAIL_PID 2>/dev/null; exit" TERM INT
 
 # Execute the Python script with arguments as PID 1
-exec python emailproxy.py --no-gui --log-file $LOG_FILE_PATH --config-file /config/emailproxy.config $CACHE_STORE_VALUE $DEBUG_VALUE $EXTERNAL_AUTH_VALUE $LOCAL_SERVER_AUTH_VALUE
+# -u flag runs Python in unbuffered mode for immediate I/O
+exec python -u emailproxy.py --no-gui --log-file $LOG_FILE_PATH --config-file /config/emailproxy.config $CACHE_STORE_VALUE $DEBUG_VALUE $EXTERNAL_AUTH_VALUE $LOCAL_SERVER_AUTH_VALUE
