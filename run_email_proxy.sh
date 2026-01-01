@@ -31,13 +31,27 @@ else
     LOG_FILE_PATH="/app/emailproxy.log"
 fi
 
-# Start tail in the background with -F to wait for file creation
+# Cleanup function to stop all child processes
+cleanup() {
+    echo "Shutting down..."
+    kill -TERM $PYTHON_PID 2>/dev/null
+    kill -TERM $TAIL_PID 2>/dev/null
+    wait $PYTHON_PID 2>/dev/null
+    wait $TAIL_PID 2>/dev/null
+    exit 0
+}
+
+# Set up signal handlers for graceful shutdown
+trap cleanup TERM INT
+
+# Start Python process in background with unbuffered I/O
+python -u emailproxy.py --no-gui --log-file $LOG_FILE_PATH --config-file /config/emailproxy.config $CACHE_STORE_VALUE $DEBUG_VALUE $EXTERNAL_AUTH_VALUE $LOCAL_SERVER_AUTH_VALUE &
+PYTHON_PID=$!
+
+# Start tail in background to stream logs to Docker
+# -F waits for file creation and follows it
 tail -F $LOG_FILE_PATH &
 TAIL_PID=$!
 
-# Trap signals to ensure clean shutdown
-trap "kill $TAIL_PID 2>/dev/null; exit" TERM INT
-
-# Execute the Python script with arguments as PID 1
-# -u flag runs Python in unbuffered mode for immediate I/O
-exec python -u emailproxy.py --no-gui --log-file $LOG_FILE_PATH --config-file /config/emailproxy.config $CACHE_STORE_VALUE $DEBUG_VALUE $EXTERNAL_AUTH_VALUE $LOCAL_SERVER_AUTH_VALUE
+# Wait for Python process to exit (keeps script running)
+wait $PYTHON_PID
