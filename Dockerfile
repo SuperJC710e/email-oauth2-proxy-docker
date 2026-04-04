@@ -1,8 +1,15 @@
-# Use a Python image based on Alpine Linux
-# Versions newer than 3.11 are not yet fully supported by emailproxy
-FROM python:3.11-alpine
+# Stage 1: Build — Debian slim supports arm-unknown-linux-gnueabihf (rustup-compatible)
+FROM python:3.11-slim AS builder
 
-# Environment variables
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends gcc libffi-dev && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN pip install --no-cache-dir --prefix=/install emailproxy
+
+# Stage 2: Runtime — clean image with no build tools
+FROM python:3.11-slim
+
 ENV PIP_BREAK_SYSTEM_PACKAGES=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PIP_NO_CACHE_DIR=1 \
@@ -11,19 +18,16 @@ ENV PIP_BREAK_SYSTEM_PACKAGES=1 \
     PIP_ROOT_USER_ACTION=ignore \
     PYTHONUNBUFFERED=1
 
-# Set the working directory
 WORKDIR /app
+
+# Copy installed packages from builder
+COPY --from=builder /install /usr/local
 
 # Download default config
 ADD https://raw.githubusercontent.com/simonrob/email-oauth2-proxy/refs/heads/main/emailproxy.config /config/emailproxy.config
 
 # Declare volume - when mounted, Docker copies existing content to new volumes
 VOLUME /config
-
-# Install core dependencies (build tools needed for cffi on arm/v6 and arm/v7)
-RUN apk add --no-cache --virtual .build-deps build-base libffi-dev && \
-    pip install emailproxy && \
-    apk del .build-deps
 
 # Copy the shell script into the container
 COPY --chmod=777 run_email_proxy.sh /app/
