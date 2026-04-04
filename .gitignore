@@ -1,3 +1,6 @@
 **/.vscode
 **/*.bak
 **/*.token
+**/*.claude
+**/CLAUDE.md
+

@@ -20,8 +20,10 @@ ADD https://raw.githubusercontent.com/simonrob/email-oauth2-proxy/refs/heads/mai
 # Declare volume - when mounted, Docker copies existing content to new volumes
 VOLUME /config
 
-# Install core dependencies
-RUN pip install emailproxy
+# Install core dependencies (build tools needed for cffi on arm/v6 and arm/v7)
+RUN apk add --no-cache --virtual .build-deps gcc musl-dev libffi-dev && \
+    pip install emailproxy && \
+    apk del .build-deps
 
 # Copy the shell script into the container
 COPY --chmod=777 run_email_proxy.sh /app/
