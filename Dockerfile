@@ -21,7 +21,7 @@ ADD https://raw.githubusercontent.com/simonrob/email-oauth2-proxy/refs/heads/mai
 VOLUME /config
 
 # Install core dependencies (build tools needed for cffi on arm/v6 and arm/v7)
-RUN apk add --no-cache --virtual .build-deps gcc musl-dev libffi-dev && \
+RUN apk add --no-cache --virtual .build-deps build-base libffi-dev && \
     pip install emailproxy && \
     apk del .build-deps
 
