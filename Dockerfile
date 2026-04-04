@@ -5,7 +5,7 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends build-essential libffi-dev && \
     rm -rf /var/lib/apt/lists/*
 
-RUN pip install --no-cache-dir --prefix=/install emailproxy
+RUN pip install --no-cache-dir --prefer-binary --prefix=/install emailproxy
 
 # Stage 2: Runtime — clean image with no build tools
 FROM python:3.11-slim
