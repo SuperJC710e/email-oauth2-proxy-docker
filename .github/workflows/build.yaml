@@ -1,0 +1,88 @@
+name: Build and Push Multi-Arch Image
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '.github/autobuild_version'
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Generate version and set env vars
+        run: |
+          repo_owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          echo "REPO_OWNER_LOWER=$repo_owner" >> $GITHUB_ENV
+
+          current_date=$(date +'%Y.%m.%d')
+          existing_version=$(cat .github/autobuild_version 2>/dev/null || echo "0")
+          version_parts=(${existing_version//./ })
+          subversion=${version_parts[3]:-0}
+
+          if [[ "$subversion" != "0" && "${existing_version%.*}" == "$current_date" ]]; then
+            version="${existing_version%.*}.$((subversion + 1))"
+          elif [[ "$existing_version" == "$current_date" ]]; then
+            version="$current_date.1"
+          else
+            version="$current_date"
+          fi
+
+          echo "VERSION=$version" >> $GITHUB_ENV
+
+      - name: Save version and push
+        run: |
+          echo "$VERSION" > .github/autobuild_version
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git add .github/autobuild_version
+          git commit -m "Update autobuild_version" || echo "No changes to commit"
+          git push origin $GITHUB_REF
+
+      - name: Build image tags list
+        run: |
+          tags="ghcr.io/$REPO_OWNER_LOWER/email-oauth2-proxy-docker:latest"
+          tags="$tags,ghcr.io/$REPO_OWNER_LOWER/email-oauth2-proxy-docker:$VERSION"
+          if [ -n "${{ secrets.DOCKERHUB_USERNAME }}" ] && [ -n "${{ secrets.DOCKERHUB_TOKEN }}" ]; then
+            tags="$tags,$REPO_OWNER_LOWER/email-oauth2-proxy-docker:latest"
+            tags="$tags,$REPO_OWNER_LOWER/email-oauth2-proxy-docker:$VERSION"
+            echo "DOCKERHUB_AVAILABLE=true" >> $GITHUB_ENV
+          fi
+          echo "IMAGE_TAGS=$tags" >> $GITHUB_ENV
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Log in to Docker Hub
+        if: env.DOCKERHUB_AVAILABLE == 'true'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push multi-arch image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6
+          push: true
+          tags: ${{ env.IMAGE_TAGS }}
